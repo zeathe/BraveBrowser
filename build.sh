@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build Build --no-cache
+docker build --tag zeathe/bravebrowser:$(cat version.txt) Build --no-cache
