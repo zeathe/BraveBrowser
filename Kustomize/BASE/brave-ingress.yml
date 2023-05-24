@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: brave-ingress
+  namespace: brave-browser
+spec:
+  rules:
+    http:
+      paths:
+      - backend:
+          service:
+            name: brave-ws
+            port:
+              number: 

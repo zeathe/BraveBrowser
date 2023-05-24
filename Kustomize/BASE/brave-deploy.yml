@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: brave-browser
+  name: brave
+spec:
+  selector:
+    matchLabels:
+      app: brave
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: brave
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - brave
+            topologyKey: "kubernetes.io/hostname"
+      volumes:
+      - name: configdir
+        emptyDir: {}
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      - name: savedir
+        persistentVolumeClaim:
+          claimName: brave-pvc-volume
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          - 10.0.0.241
+        searches:
+          - brave.svc.cluster.local 
+          - svc.cluster.local 
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+      containers:
+      - image: zeathe/bravebrowser:latest
+        imagePullPolicy: Always
+        name: brave
+        env:
+        - name: KEEP_APP_RUNNING
+          value: "1"
+        - name: DISPLAY_WIDTH
+          value: "1600"
+        - name: DISPLAY_HEIGHT
+          value: "1280"
+        - name: SECURE_CONNECTION
+          value: "1"
+        - name: VNC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: brave-secrets
+              key: vncPassword
+        ports:
+        - containerPort: 5800
+          name: brave-ws
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+          - mountPath: /config
+            name: configdir
+          - mountPath: /downloads
+            name: savedir
+        resources:
+          limits:
+            cpu: 4
+            memory: 4Gi
+          requests:
+            cpu: 1
+            memory: 2Gi 
